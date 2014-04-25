@@ -1,19 +1,12 @@
+#include "Constants.h"
 #include "Block.h"
-using namespace std;
 
 
 Block::Block(){
-	
-	
-
-	return (char*) malloc (BLOCK_SIZE+1);
+  bytes = new char[BLOCK_SIZE];
 }
 
 Block::Block(char* b){
-
-
-
-
 }
 
 

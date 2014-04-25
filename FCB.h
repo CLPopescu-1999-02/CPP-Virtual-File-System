@@ -14,30 +14,26 @@
 
 #include <list>
 
+using namespace std;
+
 class FCB {
 
 public:
-    /*
-     * Constructor
-     */
+
+    /* Constructor */
     FCB(int permissions, char* owner, char* group, int size);
 
-    /*
-     * Set the access time 
-     */
+    /* Set the access time */
     void setPermissions(const int permissions) { this->permissions = permissions; }
 
-    /*
-     * Set the access time 
-     */
+    /* Set the access time */
     void setAccessTime(const int accessTime) { this->usage_times.access = accessTime; }
 
-    /*
-     * Set the access time 
-     */
+    /* Set the access time */
     void setWriteTime(const int writeTime) { this->usage_times.write = writeTime; }
 
 private:
+
     /* Permission bits for the file (4 - read, 2 - write, 1 - execute) */
     char permissions;
 
@@ -58,5 +54,5 @@ private:
     int size;
 
     /* Linked list of pointers to the data blocks */
-    std::list<char> dataBlocks;
+    list<char> dataBlocks;
 };
