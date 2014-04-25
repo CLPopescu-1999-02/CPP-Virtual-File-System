@@ -1,11 +1,14 @@
 #include <stdio.h>
+#include <fstream>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include "directory.h"
 
-/*--------------------------------------------------------------------------------*/
+#define LINESIZE 128
+#define NAME_SIZE 50
 
-int debug = 0;	// extra output; 1 = on, 0 = off
+int debug = 0;			// extra output; 1 = on, 0 = off
 
 /*--------------------------------------------------------------------------------*/
 
@@ -28,23 +31,14 @@ int debug = 0;	// extra output; 1 = on, 0 = off
  *  exit        quit the program immediately
  */
 
-//Global variables
-const int NAME_SIZE = 50;
-
-struct Directory{
-	char* dirName;
-	Directory* nextSub;
-	Directory* firstSub;
-	Directory* prevDir;
-	//list of FCB
-	//pointer to next block
-};
-
-struct Directory *dirPtr = new Directory;
 
 /* The size argument is usually ignored.
  * The return value is 0 (success) or -1 (failure).
  */
+
+/*--------------------------------------------------------------------------------*/
+
+
 int do_root (char *name, char *size);
 int do_print(char *name, char *size);
 int do_chdir(char *name, char *size);
@@ -57,10 +51,21 @@ int do_mvfil(char *name, char *size);
 int do_szfil(char *name, char *size);
 int do_exit (char *name, char *size);
 
+void parse(char *buf, int *argc, char *argv[]);
+
+struct Direct{
+	char dirName [NAME_SIZE];
+	Direct* nextSub;
+	Direct* firstSub;
+	Direct* prevDir;
+				//list of FCB
+				//pointer to next block
+}*dirPtr;
+
 struct action {
   char *cmd;					// pointer to string
   int (*action)(char *name, char *size);	// pointer to function
-} table[] = {
+} table[12] = {
     { "root" , do_root  },
     { "print", do_print },
     { "chdir", do_chdir },
@@ -72,16 +77,14 @@ struct action {
     { "mvfil", do_mvfil },
     { "szfil", do_szfil },
     { "exit" , do_exit  },
-    { NULL, NULL }	// end marker, do not remove
+    { NULL, NULL }				/* end marker, do not remove*/
 };
 
-/*--------------------------------------------------------------------------------*/
 
-void parse(char *buf, int *argc, char *argv[]);
+Directory::Directory()
+{	
+}
 
-#define LINESIZE 128
-
-/*--------------------------------------------------------------------------------*/
 
 int main(int argc, char *argv[])
 {
@@ -94,7 +97,7 @@ int main(int argc, char *argv[])
 
   while (fgets(in, LINESIZE, stdin) != NULL)
     {
-      // commands are all like "cmd filename filesize\n" with whitespace between
+      // commands are all like "cmd filename filesize\n" with whitespace between*/
 
       // parse in
       parse(in, &n, a);
@@ -128,10 +131,12 @@ int main(int argc, char *argv[])
 /*--------------------------------------------------------------------------------*/
 
 int do_root(char *name, char *size)
-{
+{ 
   if (debug) printf("%s\n", __func__);
 
-  dirPtr->dirName = "Root";
+  dirPtr = new Direct;
+  memcpy ( dirPtr->dirName, name, strlen(name)+1 );
+ 
   dirPtr->firstSub = NULL;
   dirPtr->nextSub = NULL;
   dirPtr->prevDir = NULL;
@@ -157,6 +162,7 @@ int do_chdir(char * name, char * size)
 	//Move up a directory
 	if(strcmp(name, "..") == 0)
 	{
+printf("do chdir : chdir root\n");
 		if(dirPtr->prevDir == NULL)
 			printf("This is the root directory\n");
 		else
@@ -166,16 +172,19 @@ int do_chdir(char * name, char * size)
 	//Move down a directory
 	else
 	{
+printf("do chdir : name %s\n", name);
 		if(dirPtr->firstSub == NULL)
 		{
 			printf("Subdirectory %s does not exist.\n", name);
 			return -1;
 		}
-		dirPtr = dirPtr->firstSub;
+		else dirPtr = dirPtr->firstSub;
+printf("do chdir : name %s, first sub name %s, next sub name %s \n", name,dirPtr->firstSub->dirName,dirPtr->nextSub->dirName);
 		if(strcmp(name, dirPtr->dirName) == 0)
 		{
 			return 0;
 		}
+
 		while(dirPtr->nextSub != NULL)
 		{
 			if(strcmp(name, dirPtr->nextSub->dirName) == 0)
@@ -208,35 +217,32 @@ int do_mkdir(char * name, char * size)
 {
 	if (debug) printf("%s\n", __func__);
 
-        printf("1name %s dirptrname %s\n", name, dirPtr->dirName);
+        printf("do mkdir : name %s dirptrname %s\n", name, dirPtr->dirName);
 	if(sizeof(name) > NAME_SIZE)
 	{
 		printf("The name of the directory is too long. Try again.\n");
 		return -1;
 	}
 
-	//struct Directory *newDir = new Directory;
-        //new(newDir) Directory();
-        Directory *newDir = @Directory();
+        Direct *newDir = new Direct;
 	newDir->nextSub = NULL;
 	newDir->firstSub = NULL;
 	newDir->prevDir = dirPtr;
-	newDir->dirName = name;
-        printf("2name %s dirptrname %s\n", name, dirPtr->dirName);
+  	memcpy ( dirPtr->dirName, name, strlen(name)+1 );
+	
 	if(dirPtr->firstSub == NULL) //If the current directory has no subdirectories
 	{
 		dirPtr->firstSub = newDir;
-                printf("in here dirptrname %s\n", dirPtr->firstSub->dirName);
+                
                 delete newDir;
 		return 0;
 	}
-        printf("2.5dirptrname %s dirptrfirstsubname %s name %s\n", dirPtr->dirName, dirPtr->firstSub->dirName, name);
+        printf("do mkdir : dirptrname %s dirptrfirstsubname %s name %s\n", dirPtr->dirName, dirPtr->firstSub->dirName, name);
 	dirPtr = dirPtr->firstSub;
-        printf("3name %s dirptrname %s\n", name, dirPtr->dirName);
 	
         if(strcmp(name, dirPtr->dirName) == 0)
 	{
-		printf("Subdirectory %s already exists.1\n", name);
+		printf("Subdirectory %s already exists\n", name);
 		dirPtr = dirPtr->prevDir;
 		return -1;
 	}
@@ -388,7 +394,7 @@ int do_mvdir(char *old_name, char *new_name)
 	dirPtr = dirPtr->firstSub;
 	if(strcmp(old_name, dirPtr->dirName) == 0)
 	{
-		dirPtr->dirName = new_name;
+		memcpy ( dirPtr->dirName, new_name, strlen(new_name)+1 );
 		dirPtr = dirPtr->prevDir;
 		return 0;
 	}
@@ -399,7 +405,7 @@ int do_mvdir(char *old_name, char *new_name)
 		
 		if(strcmp(old_name, dirPtr->dirName) == 0)
 		{
-			dirPtr->dirName = new_name; //Rename directory
+			memcpy ( dirPtr->dirName, new_name, strlen(new_name)+1 ); //Rename directory
 			//Change back to original directory
 			dirPtr = dirPtr->prevDir;
 			return 0;

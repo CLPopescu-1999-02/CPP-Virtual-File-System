@@ -1,0 +1,48 @@
+#ifndef directory_h
+#define directory_h
+
+/*--------------------------------------------------------------------------------*/
+
+/* The input file (stdin) represents a sequence of file-system commands,
+ * which all look like     cmd filename filesize
+ *
+ * command	action
+ * -------	------
+ *  root	initialize root directory
+ *  print	print current working directory and all descendants
+ *  chdir	change current working directory
+ *                (.. refers to parent directory, as in Unix)
+ *  mkdir	sub-directory create (mk = make)
+ *  rmdir	              delete (rm = delete)
+ *  mvdir	              rename (mv = move)
+ *  mkfil	file create
+ *  rmfil	     delete
+ *  mvfil	     rename
+ *  szfil	     resize (sz = size)
+ *  exit        quit the program immediately
+ */
+
+
+/* The size argument is usually ignored.
+ * The return value is 0 (success) or -1 (failure).
+ */
+
+/*--------------------------------------------------------------------------------*/
+
+class Directory {
+
+public:
+	Directory();								 /* Constructor for directory */
+	int CreateFCB(int permissions, char* owner, char* group, int size);		/* Create a FCB class */
+	int CreatePCB();	 
+
+private:
+
+
+Directory * dptr;
+Directory * ptrnxt;
+    
+};
+
+
+#endif directory_h
