@@ -1,7 +1,12 @@
 #pragma once
 
 #include "Constants.h"
-#include "Directory.h"
+
+struct UsageTimes {
+    int create;
+    int access;
+    int write;
+};
 
 /*
  * A basic disk block object
@@ -12,7 +17,7 @@ public:
     Block();
     Block(char * bytesToCopy, int size);
 
-private:
+protected:
     union {
         // Byte layout for a free block table
         struct {
@@ -31,15 +36,18 @@ private:
         // Bytes layout for a file
         struct {
             struct Header {
+                UsageTimes usageTimes;
+                int entryCount;
                 char dirName[48];
-                Directory* prevDir;
-                Directory* linkedDir;
+                Block* prevDir;
+                Block* linkedDir;
+                static const int maxEntries = 30;
             } header;
 
             struct Entry {
                 char entryName[48];
-                Block* block;
-            } entrys[(BLOCK_SIZE - sizeof(Header)) / sizeof(Entry)];
+                Block* data;
+            } entrys[(BLOCK_SIZE - sizeof(Header) - sizeof(int)) / sizeof(Entry)];
 
         } directory;
 

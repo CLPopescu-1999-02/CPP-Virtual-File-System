@@ -8,6 +8,24 @@
 #define LINESIZE 128
 #define NAME_SIZE 50
 
+//Global variables
+const int NAME_SIZE = 50;
+const int NUM_FILES = 50;
+
+struct File{
+    char fileName[NAME_SIZE];
+    //pointer to the file control block
+};
+
+struct Directory{
+        char dirName[NAME_SIZE];
+        Directory* nextSub;
+        Directory* firstSub;
+        Directory* prevDir;
+        //pointer to next block
+        std::vector<File> files; //????need to set size
+};
+
 int FSUtil::do_root(char *name, char *size) {
 
   if (debug) printf("%s\n", __func__);
@@ -15,7 +33,7 @@ int FSUtil::do_root(char *name, char *size) {
   fileSystem = new FileSystem();
   currentDirectory = fileSystem.getRoot();
 
-  memcpy ( dirPtr->dirName, name, strlen(name)+1 );
+  memcpy ( dirPtr->dirName, "Root", 5 );
 
   dirPtr->firstSub = NULL;
   dirPtr->nextSub = NULL;
@@ -26,7 +44,50 @@ int FSUtil::do_root(char *name, char *size) {
 
 int FSUtil::do_print(char *name, char *size) {
   if (debug) printf("%s\n", __func__);
-  return -1;
+
+  printf("\nDirectory: %s\n", dirPtr->dirName);
+  for(int i = 0; i < dirPtr->files.size(); i++)
+      printf("%s\n", dirPtr->files[i].fileName);
+
+  //if there are no subdirectories
+  if(dirPtr->firstSub == NULL)
+      return 0;
+
+  //if there is only one subdirectory
+  if(dirPtr->firstSub->nextSub == NULL)
+  {
+      printf("%s\n", dirPtr->firstSub->dirName);
+  }
+  else
+  {
+      dirPtr = dirPtr->firstSub;
+      printf("%s\n", dirPtr->dirName);
+      while(dirPtr->nextSub != NULL)
+      {
+          dirPtr = dirPtr->nextSub;
+          printf("%s\n", dirPtr->dirName);
+      }
+      //change back to previous directory
+      dirPtr = dirPtr->prevDir;
+  }
+
+  //at this point, the files in the directory are printed
+  //now print the subdirectories, if any
+
+  //recurse over first subdirectory
+  dirPtr = dirPtr->firstSub;
+  do_print("dummy", 0);
+
+  //recurse over the rest of the subdirectories
+  while(dirPtr->nextSub != NULL)
+  {
+      dirPtr = dirPtr->nextSub;
+      do_print("dummy", 0);
+  }
+  //change back to previous directory
+  dirPtr = dirPtr->prevDir;
+
+  return 0;
 }
 
 
@@ -91,13 +152,12 @@ int FSUtil::do_chdir(char *name, char *size) {
 * Length of name must not exceed maximum length, NAME_SIZE
 * Directory must not already exist in current directory
 ********************************************************************************/
-//?????????Still need to allocate space in new block??????????????????-------------------------------------
 int FSUtil::do_mkdir(char *name, char *size) {
 
 	if (debug) printf("%s\n", __func__);
 
         printf("do mkdir : name %s dirptrname %s\n", name, dirPtr->dirName);
-	if(sizeof(name) > NAME_SIZE)
+	if(strlen(name) > NAME_SIZE)
 	{
 		printf("The name of the directory is too long. Try again.\n");
 		return -1;
@@ -107,13 +167,12 @@ int FSUtil::do_mkdir(char *name, char *size) {
 	newDir->nextSub = NULL;
 	newDir->firstSub = NULL;
 	newDir->prevDir = dirPtr;
-  	memcpy ( dirPtr->dirName, name, strlen(name)+1 );
+  	memcpy (newDir->dirName, name, strlen(name)+1 );
 
 	if(dirPtr->firstSub == NULL) //If the current directory has no subdirectories
 	{
 		dirPtr->firstSub = newDir;
 
-                delete newDir;
 		return 0;
 	}
         printf("do mkdir : dirptrname %s dirptrfirstsubname %s name %s\n", dirPtr->dirName, dirPtr->firstSub->dirName, name);
@@ -129,6 +188,7 @@ int FSUtil::do_mkdir(char *name, char *size) {
 	if(dirPtr->nextSub == NULL) //If the current directory only has 1 subdirectory
 	{
 		dirPtr->nextSub = newDir;
+                dirPtr = dirPtr->prevDir;
 		return 0;
 	}
 
@@ -217,7 +277,7 @@ int FSUtil::do_rmdir(char *name, char *size) {
 			//do temp directory stuff
 			//release block
 			dirPtr->firstSub = dirPtr->firstSub->nextSub;
-			printf("Deleting %s in 1\n", name);
+			//printf("Deleting %s in 1\n", name);
 			return 0;
 		}
 		else
@@ -231,7 +291,7 @@ int FSUtil::do_rmdir(char *name, char *size) {
 					//release block
 					dirPtr->nextSub = dirPtr->nextSub->nextSub;
 					dirPtr = dirPtr->prevDir;
-					printf("Deleting %s in 2\n", name);
+					//printf("Deleting %s in 2\n", name);
 					return 0;
 				}
 				dirPtr = dirPtr->nextSub;
@@ -300,23 +360,73 @@ int FSUtil::do_mvdir(char *name, char *size) {
 	return -1;//failure
 }
 
-int FSUtil::do_mkfil(char *name, char *size) {
+int FSUtil::do_mkfil(char *name, char *size)
+{
+  //?????????Ask for block, do FCB stuff, do size stuff?????????????????????
+  if (debug) printf("%s\n", __func__);
+
+  if(strlen(name) > NAME_SIZE)
+  {
+      printf("The size of the name is too big.\n");
+      return -1;
+  }
+
+  if(dirPtr->files.size() > NUM_FILES)
+  {
+      printf("Maximum number of files reached.\n");
+      return -1;
+  }
+
+  struct File newFile;
+  strcpy(newFile.fileName, name);
+  dirPtr->files.push_back(newFile);
   return 0;
 }
 
-int FSUtil::do_rmfil(char *name, char *size) {
-  return 0;
+
+int FSUtil::do_rmfil(char *name, char *size) 
+{
+    if (debug) printf("%s\n", __func__);
+
+  for(int i = 0; i < dirPtr->files.size(); i++)
+  {
+      //if file is found
+      if(strcmp(dirPtr->files[i].fileName, name) == 0)
+      {
+          dirPtr->files.erase(dirPtr->files.begin()+i);
+          return 0;
+      }
+  }
+  return -1;
 }
 
-int FSUtil::do_mvfil(char *name, char *size) {
-  return 0;
+int FSUtil::do_mvfil(char *name, char *size) 
+{
+    if (debug) printf("%s\n", __func__);
+
+  for(int i = 0; i < dirPtr->files.size(); i++)
+  {
+        //if file is found
+       if(strcmp(dirPtr->files[i].fileName, old_name) == 0)
+       {
+           strcpy(dirPtr->files[i].fileName, new_name);
+           return 0;
+       }
+  }
+
+  //file is not found
+  printf("File %s does not exist.\n", old_name);
+  return -1;
 }
 
 int FSUtil::do_szfil(char *name, char *size) {
   return 0;
 }
 
-int FSUtil::do_exit(char *name, char *size) {
+int FSUtil::do_exit(char *name, char *size) 
+{
+  if (debug) printf("%s\n", __func__);
+  exit(0);
   return 0;
 }
 
