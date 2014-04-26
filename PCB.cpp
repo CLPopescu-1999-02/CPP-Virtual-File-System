@@ -18,7 +18,7 @@ int PCB::getFreeBlock() {
         return -1;
     }
 
-    // Save the index of the nextFreeBlock to return 
+    // Save the index of the nextFreeBlock to return
     int freeBlockIndex = nextFreeBlock;
 
     // Increment the nextFreeBlock index

@@ -22,14 +22,4 @@ public:
   /* Block* getFreeBlock(); */
   int getFreeBlock();
 
-private:
-
-  /* Size of a block; */
-  static const int blockSize = BLOCK_SIZE;
-
-  /* Number of free blocks available */
-  int freeBlockCount;
-
-  /* Index the next free block */
-  int nextFreeBlock;
 };
