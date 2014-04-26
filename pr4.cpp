@@ -1,12 +1,33 @@
 #include <stdio.h>
-#include <fstream>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include "FSUtil.h"
+#include <vector>
 
-#define LINESIZE 128
-#define NAME_SIZE 50
+/*--------------------------------------------------------------------------------*/
+
+int debug = 0;	// extra output; 1 = on, 0 = off
+
+/*--------------------------------------------------------------------------------*/
+
+/* The input file (stdin) represents a sequence of file-system commands,
+ * which all look like     cmd filename filesize
+ *
+ * command	action
+ * -------	------
+ *  root	initialize root directory
+ *  print	print current working directory and all descendants
+ *  chdir	change current working directory
+ *                (.. refers to parent directory, as in Unix)
+ *  mkdir	sub-directory create (mk = make)
+ *  rmdir	              delete (rm = delete)
+ *  mvdir	              rename (mv = move)
+ *  mkfil	file create
+ *  rmfil	     delete
+ *  mvfil	     rename
+ *  szfil	     resize (sz = size)
+ *  exit        quit the program immediately
+ */
 
 //Global variables
 const int NAME_SIZE = 50;
@@ -18,23 +39,107 @@ struct File{
 };
 
 struct Directory{
-        char dirName[NAME_SIZE];
-        Directory* nextSub;
-        Directory* firstSub;
-        Directory* prevDir;
-        //pointer to next block
-        std::vector<File> files; //????need to set size
+	char dirName[NAME_SIZE];
+	Directory* nextSub;
+	Directory* firstSub;
+	Directory* prevDir;
+	//list of FCB
+	//pointer to next block
+	std::vector<File> files; //????need to set size
 };
 
-int FSUtil::do_root(char *name, char *size) {
+struct Directory *dirPtr = new Directory;
 
+/* The size argument is usually ignored.
+ * The return value is 0 (success) or -1 (failure).
+ */
+int do_root (char *name, char *size);
+int do_print(char *name, char *size);
+int do_chdir(char *name, char *size);
+int do_mkdir(char *name, char *size);
+int do_rmdir(char *name, char *size);
+int do_mvdir(char *name, char *size);
+int do_mkfil(char *name, char *size);
+int do_rmfil(char *name, char *size);
+int do_mvfil(char *name, char *size);
+int do_szfil(char *name, char *size);
+int do_exit (char *name, char *size);
+
+struct action {
+  char *cmd;					// pointer to string
+  int (*action)(char *name, char *size);	// pointer to function
+} table[] = {
+    { "root" , do_root  },
+    { "print", do_print },
+    { "chdir", do_chdir },
+    { "mkdir", do_mkdir },
+    { "rmdir", do_rmdir },
+    { "mvdir", do_mvdir },
+    { "mkfil", do_mkfil },
+    { "rmfil", do_rmfil },
+    { "mvfil", do_mvfil },
+    { "szfil", do_szfil },
+    { "exit" , do_exit  },
+    { NULL, NULL }	// end marker, do not remove
+};
+
+/*--------------------------------------------------------------------------------*/
+
+void parse(char *buf, int *argc, char *argv[]);
+
+#define LINESIZE 128
+
+/*--------------------------------------------------------------------------------*/
+
+int main(int argc, char *argv[])
+{
+  char in[LINESIZE];
+  char *cmd, *fnm, *fsz;
+  char dummy[] = "";
+
+  int n;
+  char *a[LINESIZE];
+
+  while (fgets(in, LINESIZE, stdin) != NULL)
+    {
+      // commands are all like "cmd filename filesize\n" with whitespace between
+
+      // parse in
+      parse(in, &n, a);
+
+      cmd = (n > 0) ? a[0] : dummy;
+      fnm = (n > 1) ? a[1] : dummy;
+      fsz = (n > 2) ? a[2] : dummy;
+      if (debug) printf(":%s:%s:%s:\n", cmd, fnm, fsz);
+
+      if (n == 0) continue;	// blank line
+
+      int found = 0;
+      for (struct action *ptr = table; ptr->cmd != NULL; ptr++)
+        {
+	  if (strcmp(ptr->cmd, cmd) == 0)
+	    {
+	      found = 1;
+	      int ret = (ptr->action)(fnm, fsz);
+	      if (ret == -1)
+	        { printf("  %s %s %s: failed\n", cmd, fnm, fsz); }
+	      break;
+	    }
+	}
+      if (!found)
+        { printf("command not found: %s\n", cmd); }
+    }
+
+  return 0;
+}
+
+/*--------------------------------------------------------------------------------*/
+
+int do_root(char *name, char *size)
+{
   if (debug) printf("%s\n", __func__);
 
-  fileSystem = new FileSystem();
-  currentDirectory = fileSystem.getRoot();
-
-  memcpy ( dirPtr->dirName, "Root", 5 );
-
+  strcpy(dirPtr->dirName, "Root");
   dirPtr->firstSub = NULL;
   dirPtr->nextSub = NULL;
   dirPtr->prevDir = NULL;
@@ -42,10 +147,19 @@ int FSUtil::do_root(char *name, char *size) {
   return 0;
 }
 
-int FSUtil::do_print(char *name, char *size) {
-  if (debug) printf("%s\n", __func__);
+/*******************************************************************************
+* Print function
+* This function is similar to "ls -lR".
+* It will print the name of the current directory and list its files, then
+*   recurse over its subdirectories.
+*******************************************************************************/
 
+int do_print(char *name, char *size)
+{
+  if (debug) printf("%s\n", __func__);
+  
   printf("\nDirectory: %s\n", dirPtr->dirName);
+  //print out files????????????????????????????????????????
   for(int i = 0; i < dirPtr->files.size(); i++)
       printf("%s\n", dirPtr->files[i].fileName);
 
@@ -73,11 +187,11 @@ int FSUtil::do_print(char *name, char *size) {
 
   //at this point, the files in the directory are printed
   //now print the subdirectories, if any
-
+  
   //recurse over first subdirectory
   dirPtr = dirPtr->firstSub;
   do_print("dummy", 0);
-
+  
   //recurse over the rest of the subdirectories
   while(dirPtr->nextSub != NULL)
   {
@@ -90,19 +204,18 @@ int FSUtil::do_print(char *name, char *size) {
   return 0;
 }
 
-
 /*******************************************************************************
 * Change directory function.
 * (cd ..) to move up a directory
 * (cd "nameOfDir") to move to the subdirectory called nameOfDir
 ********************************************************************************/
-int FSUtil::do_chdir(char *name, char *size) {
-    if (debug) printf("%s\n", __func__);
+int do_chdir(char * name, char * size)
+{
+	if (debug) printf("%s\n", __func__);
 
 	//Move up a directory
 	if(strcmp(name, "..") == 0)
 	{
-        printf("do chdir : chdir root\n");
 		if(dirPtr->prevDir == NULL)
 			printf("This is the root directory\n");
 		else
@@ -112,19 +225,16 @@ int FSUtil::do_chdir(char *name, char *size) {
 	//Move down a directory
 	else
 	{
-        printf("do chdir : name %s\n", name);
 		if(dirPtr->firstSub == NULL)
 		{
 			printf("Subdirectory %s does not exist.\n", name);
 			return -1;
 		}
-		else dirPtr = dirPtr->firstSub;
-        printf("do chdir : name %s, first sub name %s, next sub name %s \n", name,dirPtr->firstSub->dirName,dirPtr->nextSub->dirName);
+		dirPtr = dirPtr->firstSub;
 		if(strcmp(name, dirPtr->dirName) == 0)
 		{
 			return 0;
 		}
-
 		while(dirPtr->nextSub != NULL)
 		{
 			if(strcmp(name, dirPtr->nextSub->dirName) == 0)
@@ -135,7 +245,7 @@ int FSUtil::do_chdir(char *name, char *size) {
 			else
 			{
 				dirPtr = dirPtr->nextSub;
-
+				
 			}
 		}
 		//Change back to original directory if the subdirectory does not exist.
@@ -152,36 +262,34 @@ int FSUtil::do_chdir(char *name, char *size) {
 * Length of name must not exceed maximum length, NAME_SIZE
 * Directory must not already exist in current directory
 ********************************************************************************/
-int FSUtil::do_mkdir(char *name, char *size) {
-
+//?????????Still need to allocate space in new block??????????????????-------------------------------------
+int do_mkdir(char * name, char * size)
+{
 	if (debug) printf("%s\n", __func__);
-
-        printf("do mkdir : name %s dirptrname %s\n", name, dirPtr->dirName);
+        
 	if(strlen(name) > NAME_SIZE)
 	{
 		printf("The name of the directory is too long. Try again.\n");
 		return -1;
 	}
-
-        Direct *newDir = new Direct;
+	Directory *newDir = new Directory();
 	newDir->nextSub = NULL;
 	newDir->firstSub = NULL;
 	newDir->prevDir = dirPtr;
-  	memcpy (newDir->dirName, name, strlen(name)+1 );
+	strcpy(newDir->dirName, name);
 
 	if(dirPtr->firstSub == NULL) //If the current directory has no subdirectories
 	{
 		dirPtr->firstSub = newDir;
-
 		return 0;
 	}
-        printf("do mkdir : dirptrname %s dirptrfirstsubname %s name %s\n", dirPtr->dirName, dirPtr->firstSub->dirName, name);
 	dirPtr = dirPtr->firstSub;
-
+	
         if(strcmp(name, dirPtr->dirName) == 0)
 	{
-		printf("Subdirectory %s already exists\n", name);
+		printf("Subdirectory %s already exists.1\n", name);
 		dirPtr = dirPtr->prevDir;
+                
 		return -1;
 	}
 
@@ -201,7 +309,7 @@ int FSUtil::do_mkdir(char *name, char *size) {
 			dirPtr = dirPtr->prevDir;
 			return -1;
 		}
-
+		
 	}
 
 	dirPtr->nextSub = newDir;
@@ -218,7 +326,7 @@ int FSUtil::do_mkdir(char *name, char *size) {
 * Directory must exist in current directory
 ********************************************************************************/
 //when exiting this function, dirPtr should be the directory from which you started
-int FSUtil::do_rmdir(char *name, char *size) {
+int do_rmdir(char * name, char * size)
 {
 	if (debug) printf("%s\n", __func__);
 
@@ -273,7 +381,7 @@ int FSUtil::do_rmdir(char *name, char *size) {
 	{
 		dirPtr = dirPtr->prevDir;
 		if(strcmp(name, dirPtr->firstSub->dirName) == 0)
-		{
+		{			
 			//do temp directory stuff
 			//release block
 			dirPtr->firstSub = dirPtr->firstSub->nextSub;
@@ -321,18 +429,19 @@ int FSUtil::do_rmdir(char *name, char *size) {
 * The directory old_name must be in the current directory
 ********************************************************************************/
 //Does this check only current directory subdirectories?????????????????????????????????????
-int FSUtil::do_mvdir(char *name, char *size) {
+int do_mvdir(char *old_name, char *new_name)
+{
 	if (debug) printf("%s\n", __func__);
 
 	if(dirPtr->firstSub == NULL)
 	{
-		printf("Directory %s does not existt.\n", old_name);
+		printf("Directory %s does not exist.\n", old_name);
 		return -1;
 	}
 	dirPtr = dirPtr->firstSub;
 	if(strcmp(old_name, dirPtr->dirName) == 0)
 	{
-		memcpy ( dirPtr->dirName, new_name, strlen(new_name)+1 );
+		strcpy(dirPtr->dirName, new_name);
 		dirPtr = dirPtr->prevDir;
 		return 0;
 	}
@@ -340,10 +449,10 @@ int FSUtil::do_mvdir(char *name, char *size) {
 	while(dirPtr->nextSub != NULL)
 	{
 		dirPtr = dirPtr->nextSub;
-
+		
 		if(strcmp(old_name, dirPtr->dirName) == 0)
 		{
-			memcpy ( dirPtr->dirName, new_name, strlen(new_name)+1 ); //Rename directory
+			strcpy(dirPtr->dirName, new_name); //Rename directory
 			//Change back to original directory
 			dirPtr = dirPtr->prevDir;
 			return 0;
@@ -360,11 +469,11 @@ int FSUtil::do_mvdir(char *name, char *size) {
 	return -1;//failure
 }
 
-int FSUtil::do_mkfil(char *name, char *size)
+int do_mkfil(char *name, char *size)
 {
   //?????????Ask for block, do FCB stuff, do size stuff?????????????????????
   if (debug) printf("%s\n", __func__);
-
+  
   if(strlen(name) > NAME_SIZE)
   {
       printf("The size of the name is too big.\n");
@@ -383,10 +492,9 @@ int FSUtil::do_mkfil(char *name, char *size)
   return 0;
 }
 
-
-int FSUtil::do_rmfil(char *name, char *size) 
+int do_rmfil(char *name, char *size)
 {
-    if (debug) printf("%s\n", __func__);
+  if (debug) printf("%s\n", __func__);
 
   for(int i = 0; i < dirPtr->files.size(); i++)
   {
@@ -399,11 +507,11 @@ int FSUtil::do_rmfil(char *name, char *size)
   }
   return -1;
 }
-
-int FSUtil::do_mvfil(char *name, char *size) 
+	
+int do_mvfil(char *old_name, char *new_name)
 {
-    if (debug) printf("%s\n", __func__);
-
+  if (debug) printf("%s\n", __func__);
+  
   for(int i = 0; i < dirPtr->files.size(); i++)
   {
         //if file is found
@@ -419,11 +527,13 @@ int FSUtil::do_mvfil(char *name, char *size)
   return -1;
 }
 
-int FSUtil::do_szfil(char *name, char *size) {
-  return 0;
+int do_szfil(char *name, char *size)
+{
+  if (debug) printf("%s\n", __func__);
+  return -1;
 }
 
-int FSUtil::do_exit(char *name, char *size) 
+int do_exit(char *name, char *size)
 {
   if (debug) printf("%s\n", __func__);
   exit(0);
@@ -431,3 +541,35 @@ int FSUtil::do_exit(char *name, char *size)
 }
 
 /*--------------------------------------------------------------------------------*/
+
+// parse a command line, where buf came from fgets()
+
+// Note - the trailing '\n' in buf is whitespace, and we need it as a delimiter.
+
+void parse(char *buf, int *argc, char *argv[])
+{
+  char *delim;          // points to first space delimiter
+  int count = 0;        // number of args
+
+  char whsp[] = " \t\n\v\f\r";          // whitespace characters
+
+  while (1)                             // build the argv list
+    {
+      buf += strspn(buf, whsp);         // skip leading whitespace
+      delim = strpbrk(buf, whsp);       // next whitespace char or NULL
+      if (delim == NULL)                // end of line
+        { break; }
+      argv[count++] = buf;              // start argv[i]
+      *delim = '\0';                    // terminate argv[i]
+      buf = delim + 1;                  // start argv[i+1]?
+    }
+  argv[count] = NULL;
+
+  *argc = count;
+
+  return;
+}
+
+/*--------------------------------------------------------------------------------*/
+
+
