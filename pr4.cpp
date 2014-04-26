@@ -32,7 +32,7 @@ int debug = 0;	// extra output; 1 = on, 0 = off
 const int NAME_SIZE = 50;
 
 struct Directory{
-	char* dirName;
+	char dirName[NAME_SIZE];
 	Directory* nextSub;
 	Directory* firstSub;
 	Directory* prevDir;
@@ -131,7 +131,7 @@ int do_root(char *name, char *size)
 {
   if (debug) printf("%s\n", __func__);
 
-  dirPtr->dirName = "Root";
+  strcpy(dirPtr->dirName, "Root");
   dirPtr->firstSub = NULL;
   dirPtr->nextSub = NULL;
   dirPtr->prevDir = NULL;
@@ -139,10 +139,58 @@ int do_root(char *name, char *size)
   return 0;
 }
 
+/*******************************************************************************
+* Print function
+* This function is similar to "ls -lR".
+* It will print the name of the current directory and list its files, then
+*   recurse over its subdirectories.
+*******************************************************************************/
+
 int do_print(char *name, char *size)
 {
   if (debug) printf("%s\n", __func__);
-  return -1;
+  
+  printf("\nDirectory: %s\n", dirPtr->dirName);
+  //print out files????????????????????????????????????????
+  //if there are no subdirectories
+  if(dirPtr->firstSub == NULL)
+      return 0;
+
+  //if there is only one subdirectory
+  if(dirPtr->firstSub->nextSub == NULL)
+  {
+      printf("%s\n", dirPtr->firstSub->dirName);
+  }
+  else
+  {
+      dirPtr = dirPtr->firstSub;
+      printf("%s\n", dirPtr->dirName);
+      while(dirPtr->nextSub != NULL)
+      {
+          dirPtr = dirPtr->nextSub;
+          printf("%s\n", dirPtr->dirName);
+      }
+      //change back to previous directory
+      dirPtr = dirPtr->prevDir;
+  }
+
+  //at this point, the files in the directory are printed
+  //now print the subdirectories, if any
+  
+  //recurse over first subdirectory
+  dirPtr = dirPtr->firstSub;
+  do_print("dummy", 0);
+  
+  //recurse over the rest of the subdirectories
+  while(dirPtr->nextSub != NULL)
+  {
+      dirPtr = dirPtr->nextSub;
+      do_print("dummy", 0);
+  }
+  //change back to previous directory
+  dirPtr = dirPtr->prevDir;
+
+  return 0;
 }
 
 /*******************************************************************************
@@ -207,43 +255,37 @@ int do_chdir(char * name, char * size)
 int do_mkdir(char * name, char * size)
 {
 	if (debug) printf("%s\n", __func__);
-
-        printf("1name %s dirptrname %s\n", name, dirPtr->dirName);
-	if(sizeof(name) > NAME_SIZE)
+        
+	if(strlen(name) > NAME_SIZE)
 	{
 		printf("The name of the directory is too long. Try again.\n");
 		return -1;
 	}
-
-	//struct Directory *newDir = new Directory;
-        //new(newDir) Directory();
-        Directory *newDir = @Directory();
+	Directory *newDir = new Directory();
 	newDir->nextSub = NULL;
 	newDir->firstSub = NULL;
 	newDir->prevDir = dirPtr;
-	newDir->dirName = name;
-        printf("2name %s dirptrname %s\n", name, dirPtr->dirName);
+	strcpy(newDir->dirName, name);
+
 	if(dirPtr->firstSub == NULL) //If the current directory has no subdirectories
 	{
 		dirPtr->firstSub = newDir;
-                printf("in here dirptrname %s\n", dirPtr->firstSub->dirName);
-                delete newDir;
 		return 0;
 	}
-        printf("2.5dirptrname %s dirptrfirstsubname %s name %s\n", dirPtr->dirName, dirPtr->firstSub->dirName, name);
 	dirPtr = dirPtr->firstSub;
-        printf("3name %s dirptrname %s\n", name, dirPtr->dirName);
 	
         if(strcmp(name, dirPtr->dirName) == 0)
 	{
 		printf("Subdirectory %s already exists.1\n", name);
 		dirPtr = dirPtr->prevDir;
+                
 		return -1;
 	}
 
 	if(dirPtr->nextSub == NULL) //If the current directory only has 1 subdirectory
 	{
 		dirPtr->nextSub = newDir;
+                dirPtr = dirPtr->prevDir;
 		return 0;
 	}
 
@@ -332,7 +374,7 @@ int do_rmdir(char * name, char * size)
 			//do temp directory stuff
 			//release block
 			dirPtr->firstSub = dirPtr->firstSub->nextSub;
-			printf("Deleting %s in 1\n", name);
+			//printf("Deleting %s in 1\n", name);
 			return 0;
 		}
 		else
@@ -346,7 +388,7 @@ int do_rmdir(char * name, char * size)
 					//release block
 					dirPtr->nextSub = dirPtr->nextSub->nextSub;
 					dirPtr = dirPtr->prevDir;
-					printf("Deleting %s in 2\n", name);
+					//printf("Deleting %s in 2\n", name);
 					return 0;
 				}
 				dirPtr = dirPtr->nextSub;
@@ -382,13 +424,13 @@ int do_mvdir(char *old_name, char *new_name)
 
 	if(dirPtr->firstSub == NULL)
 	{
-		printf("Directory %s does not existt.\n", old_name);
+		printf("Directory %s does not exist.\n", old_name);
 		return -1;
 	}
 	dirPtr = dirPtr->firstSub;
 	if(strcmp(old_name, dirPtr->dirName) == 0)
 	{
-		dirPtr->dirName = new_name;
+		strcpy(dirPtr->dirName, new_name);
 		dirPtr = dirPtr->prevDir;
 		return 0;
 	}
@@ -399,7 +441,7 @@ int do_mvdir(char *old_name, char *new_name)
 		
 		if(strcmp(old_name, dirPtr->dirName) == 0)
 		{
-			dirPtr->dirName = new_name; //Rename directory
+			strcpy(dirPtr->dirName, new_name); //Rename directory
 			//Change back to original directory
 			dirPtr = dirPtr->prevDir;
 			return 0;
