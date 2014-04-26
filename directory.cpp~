@@ -110,17 +110,17 @@ int main(int argc, char *argv[])
       if (n == 0) continue;	// blank line
 
       int found = 0;
-      for (struct action *ptr = table; ptr->cmd != NULL; ptr++)
-        {
-	  if (strcmp(ptr->cmd, cmd) == 0)
-	    {
-	      found = 1;
-	      int ret = (ptr->action)(fnm, fsz);
-	      if (ret == -1)
-	        { printf("  %s %s %s: failed\n", cmd, fnm, fsz); }
-	      break;
-	    }
-	}
+      for (struct action *ptr = table; ptr->cmd != NULL; ptr++) {
+
+        if (strcmp(ptr->cmd, cmd) == 0)
+          {
+            found = 1;
+            int ret = (ptr->action)(fnm, fsz);
+            if (ret == -1)
+              { printf("  %s %s %s: failed\n", cmd, fnm, fsz); }
+            break;
+          }
+      }
       if (!found)
         { printf("command not found: %s\n", cmd); }
     }

@@ -1,15 +1,13 @@
+#pragma once
+
 #include <stdio.h>
 #include <fstream>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include "FileSystem.h"
-#include "Directory.h"
-
-#define LINESIZE 128
-#define NAME_SIZE 50
-
-#pragma once
+/* #include "FileSystem.h" */
+/* #include "Directory.h" */
+#include "Constants.h"
 
 /*
  * This class initializes the file system and provides functions to operate on
@@ -18,6 +16,8 @@
 class FSUtil {
 
 public:
+    FSUtil();
+
     int do_root (char *name, char *size);
     int do_print(char *name, char *size);
     int do_chdir(char *name, char *size);
@@ -32,12 +32,12 @@ public:
 
 private:
     /* The whole file system */
-    FileSystem fileSys;
+    /* FileSystem fileSys; */
 
     /* The current directory to operate on */
-    Directory curDir;
+    /* Directory curDir; */
 
     /* The previous directory */
     // Might just keep a reference in the directory object
-    Directory prevDir;
+    /* Directory prevDir; */
 };

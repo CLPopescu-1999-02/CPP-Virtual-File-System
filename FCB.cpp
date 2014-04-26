@@ -16,7 +16,6 @@ FCB::FCB(File* dataBlocks[],  int size,
     fcb.permissions = permissions;
     strcpy(fcb.owner, owner);
     strcpy(fcb.group, group);
-
 }
 
 /* Returns a pointer to the first file Block */

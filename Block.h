@@ -21,8 +21,8 @@ protected:
     union {
         // Byte layout for a free block table
         struct {
-            Block* nextBlock;
             Block* freeBlocks [BLOCK_SIZE/sizeof(Block*) - 1];
+            Block* linkedFBT;
         } fbt;
 
         // Bytes layout for a partition control block
@@ -30,6 +30,7 @@ protected:
             int blockSize;
             int freeBlockCount;
             int nextFreeBlock;
+            int blocksPerFBT;
             Block* freeBlockTable;
         } pcb;
 

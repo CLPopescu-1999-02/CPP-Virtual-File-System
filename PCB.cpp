@@ -1,31 +1,36 @@
 #include "PCB.h"
 
 #include "Constants.h"
+#include "FBT.h"
 
-PCB::PCB() : Block() {
+PCB::PCB(FileSystem fs) : Block() {
+
+    pcb.blockSize = BLOCK_SIZE;
+
     // This block is the first block of the disk, so one less free block
-    freeBlockCount = NUM_OF_BLOCKS - 1;
+    pcb.freeBlockCount = NUM_OF_BLOCKS - 1;
 
-    // Next free block is the second block in the file system since the PCB is
-    // the first.
-    /* nextFreeBlock = blocks[1]; */
-    nextFreeBlock = 1;
+    // Create the free block table
+    pcb.freeBlockTable = new FBT(&fs.getBlocks()[1], pcb.freeBlockCount);
+
+    // Index into the FBT
+    pcb.nextFreeBlock = 0;
 }
 
-int PCB::getFreeBlock() {
+Block* PCB::getFreeBlock() {
     // If no free blocks, return -1
-    if (freeBlockCount > NUM_OF_BLOCKS) {
-        return -1;
+    if (pcb.freeBlockCount > NUM_OF_BLOCKS) {
+        return NULL;
     }
 
     // Save the index of the nextFreeBlock to return
-    int freeBlockIndex = nextFreeBlock;
+    int freeBlockIndex = pcb.nextFreeBlock;
 
     // Increment the nextFreeBlock index
-    nextFreeBlock++;
+    pcb.nextFreeBlock++;
 
     // Decrease the number of free blocks
-    freeBlockCount--;
+    pcb.freeBlockCount--;
 
-    return freeBlockIndex;
+    return ((FBT*) pcb.freeBlockTable)->getBlock(freeBlockIndex);
 }

@@ -17,9 +17,8 @@ class PCB : public Block {
 public:
 
   /* Default constructor */
-  PCB();
+  PCB(FileSystem fs);
 
   /* Block* getFreeBlock(); */
-  int getFreeBlock();
-
+  Block* getFreeBlock();
 };
