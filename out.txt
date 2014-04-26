@@ -1,0 +1,1 @@
+do mkdir :  dirptr 0xb40280, 0xb402e0 newptr
