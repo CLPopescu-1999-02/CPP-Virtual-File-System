@@ -12,47 +12,29 @@
 
 #pragma once
 
-#include <list>
+#include "File.h"
 
-using namespace std;
-
-class FCB {
+class FCB : public Block {
 
 public:
 
     /* Constructor */
-    FCB(int permissions, char* owner, char* group, int size);
+    FCB(File* dataBlocks[],  int size, int permissions, char* owner, char* group);
+
+    /* Returns a pointer to the first file Block */
+    File* getFile();
+
+    /* Returns the file size in bytes */
+    int getFileSize();
 
     /* Set the access time */
-    void setPermissions(const int permissions) { this->permissions = permissions; }
+    void setPermissions(const int permissions);
+
+    void setCreateTime();
 
     /* Set the access time */
-    void setAccessTime(const int accessTime) { this->usage_times.access = accessTime; }
+    void setAccessTime();
 
     /* Set the access time */
-    void setWriteTime(const int writeTime) { this->usage_times.write = writeTime; }
-
-private:
-
-    /* Permission bits for the file (4 - read, 2 - write, 1 - execute) */
-    char permissions;
-
-    /* Different usage time associated with the file */
-    struct Usage_times {
-        int create;
-        int access;
-        int write;
-    } usage_times;
-
-    /* User the file belongs to */
-    char* owner;
-
-    /* Group that the file belongs to */
-    char* group;
-
-    /* Size of the file in bytes */
-    int size;
-
-    /* Linked list of pointers to the data blocks */
-    list<char> dataBlocks;
+    void setWriteTime();
 };

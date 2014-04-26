@@ -33,6 +33,15 @@ protected:
             Block* freeBlockTable;
         } pcb;
 
+        struct {
+            char permissions;
+            UsageTimes usageTimes;
+            char owner[48];
+            char group[48];
+            int fileSize;
+            Block* data[30]; // Should have MAX_DATA attribute
+        } fcb;
+
         // Bytes layout for a file
         struct {
             struct Header {
