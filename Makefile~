@@ -1,6 +1,0 @@
-directory: directory.cpp
-	g++ -std=c++0x -Wall -Wextra -g -o directory.cpp directory
-
-clean:
-	rm pr4
-
