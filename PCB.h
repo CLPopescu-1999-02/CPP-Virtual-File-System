@@ -5,7 +5,6 @@
 
 #include "Block.h"
 #include "Constants.h"
-#include "FileSystem.h"
 
 using namespace std;
 
@@ -17,7 +16,7 @@ class PCB : public Block {
 public:
 
   /* Default constructor */
-  PCB(FileSystem fs);
+  PCB(Block* blocks[]);
 
   /* Block* getFreeBlock(); */
   Block* getFreeBlock();

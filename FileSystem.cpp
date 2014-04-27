@@ -1,8 +1,8 @@
-
 #include "FileSystem.h"
+#include "PCB.h"
 
 FileSystem::FileSystem() {
-    blocks[0] = new PCB();
+    blocks[0] = new PCB(blocks);
 }
 
 Block** FileSystem::getBlocks() {
@@ -14,5 +14,13 @@ PCB* FileSystem::getPCB() {
 }
 
 void FileSystem::addBlock(Block* block) {
-    blocks[getPCB()->getFreeBlock()] = block;
+    return;
+}
+
+Directory* FileSystem::getRoot() {
+    Directory* root = new Directory("Root");
+    Block* freeBlock = getPCB()->getFreeBlock();
+    freeBlock = root;
+
+    return root; 
 }

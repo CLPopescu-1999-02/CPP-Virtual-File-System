@@ -6,11 +6,14 @@
 
 
 Block::Block(){
-  bytes = new char[BLOCK_SIZE];
+}
+
+int Block::getType() {
+    return 0;
 }
 
 Block::Block(char* bytesToCopy, int size){
-  memcpy(bytes, bytesToCopy, size);
+  memcpy(blockBytes, bytesToCopy, size);
 }
 
 

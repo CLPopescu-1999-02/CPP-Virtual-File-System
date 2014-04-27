@@ -3,7 +3,7 @@
 #include "Constants.h"
 #include "FBT.h"
 
-PCB::PCB(FileSystem fs) : Block() {
+PCB::PCB(Block* blocks[]) : Block() {
 
     pcb.blockSize = BLOCK_SIZE;
 
@@ -11,7 +11,7 @@ PCB::PCB(FileSystem fs) : Block() {
     pcb.freeBlockCount = NUM_OF_BLOCKS - 1;
 
     // Create the free block table
-    pcb.freeBlockTable = new FBT(&fs.getBlocks()[1], pcb.freeBlockCount);
+    pcb.freeBlockTable = new FBT(&blocks[1], pcb.freeBlockCount);
 
     // Index into the FBT
     pcb.nextFreeBlock = 0;

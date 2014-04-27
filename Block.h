@@ -15,7 +15,10 @@ class Block {
 
 public:
     Block();
+
     Block(char * bytesToCopy, int size);
+
+    virtual int getType();
 
 protected:
     union {
@@ -72,6 +75,8 @@ protected:
 };
 
 struct Entry {
-    char* name;
-    Block* dataBlock;
+    char entryName[48];
+    Block* data;
 };
+
+
