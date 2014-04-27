@@ -1,19 +1,19 @@
+#include <stdio.h>
+#include <string.h>
+
+#include "Constants.h"
 #include "Block.h"
-using namespace std;
 
 
 Block::Block(){
-	
-	
-
-	return (char*) malloc (BLOCK_SIZE+1);
 }
 
-Block::Block(char* b){
+int Block::getType() {
+    return 0;
+}
 
-
-
-
+Block::Block(char* bytesToCopy, int size){
+  memcpy(blockBytes, bytesToCopy, size);
 }
 
 
