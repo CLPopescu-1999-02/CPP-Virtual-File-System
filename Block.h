@@ -24,7 +24,8 @@ protected:
     union {
         // Byte layout for a free block table
         struct {
-            Block* freeBlocks [BLOCK_SIZE/sizeof(Block*) - 1];
+            /* Block* freeBlocks [BLOCK_SIZE/sizeof(Block*) - 1]; */
+            Block* freeBlocks;
             Block* linkedFBT;
         } fbt;
 

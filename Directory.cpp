@@ -2,6 +2,7 @@
 #include "Block.h"
 #include "string.h"
 #include <time.h>
+#include <stdio.h>
 
 
 Directory::Directory(char* name) : Block() {
@@ -9,6 +10,7 @@ Directory::Directory(char* name) : Block() {
 }
 
 Directory::Directory(char* name, Directory* prevDir) : Block() {
+    printf("a");
     strcpy(directory.header.dirName, name);
     directory.header.prevDir = prevDir;
 
@@ -39,6 +41,7 @@ Entry* Directory::getEntries() {
 }
 
 char* Directory::getName() {
+    printf("b%s", directory.header.dirName);
     return directory.header.dirName;
 }
 

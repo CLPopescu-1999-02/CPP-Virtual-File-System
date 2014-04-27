@@ -7,16 +7,17 @@
 #include "Constants.h"
 
 FBT::FBT(Block* freeBlocks[], int blockCount) : Block() {
-    const int blocksToWrite = ((BLOCK_SIZE / sizeof(Block*)) - 1);
-    memcpy(fbt.freeBlocks, freeBlocks, (blocksToWrite * sizeof(Block*)));
+    fbt.freeBlocks = new Block[30];
+    /* const int blocksToWrite = ((BLOCK_SIZE / sizeof(Block*)) - 1); */
+    /* memcpy(fbt.freeBlocks, freeBlocks, (blocksToWrite * sizeof(Block*))); */
 
-    // Link this to a new FBT that is passed the free blocks that haven't
-    // already been stored in this current FBT.
-    if ((blockCount - blocksToWrite) <= 0) {
-        fbt.linkedFBT = NULL;
-    } else {
-        fbt.linkedFBT = new FBT(&freeBlocks[blocksToWrite], (blockCount - blocksToWrite));
-    }
+    /* // Link this to a new FBT that is passed the free blocks that haven't */
+    /* // already been stored in this current FBT. */
+    /* if ((blockCount - blocksToWrite) <= 0) { */
+    /*     fbt.linkedFBT = NULL; */
+    /* } else { */
+    /*     fbt.linkedFBT = new FBT(&freeBlocks[blocksToWrite], (blockCount - blocksToWrite)); */
+    /* } */
 }
 
 /* Get the block from the block table at index */
@@ -33,7 +34,9 @@ Block* FBT::getBlock(int index) {
     }
 
     // Return the Block* in the current FBT
-    return currentFBT->fbt.freeBlocks[index % blockPtrsInBlock];
+    // Return the Block* in the current FBT
+    return new Block();
+    /* return currentFBT->fbt.freeBlocks[index % blockPtrsInBlock]; */
 };
 
 FBT* FBT::getLinkedFBT() {

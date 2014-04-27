@@ -32,7 +32,7 @@ int FSUtil::do_root(char *name, char *size) {
       printf("Not NULL");
   }
   curDir = fs->getRoot();
-  /* printf("%s", curDir->getName()); */
+  printf("%s", curDir->getName());
 
   return 0;
 }

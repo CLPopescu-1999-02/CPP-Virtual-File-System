@@ -20,8 +20,8 @@ void FileSystem::addBlock(Block* block) {
 
 Directory* FileSystem::getRoot() {
     Directory* root = new Directory("Root");
-    Block* freeBlock = getPCB()->getFreeBlock();
+    /* Block* freeBlock = getPCB()->getFreeBlock(); */
     /* freeBlock = root; */
 
-    return root; 
+    return (Directory*) root; 
 }
