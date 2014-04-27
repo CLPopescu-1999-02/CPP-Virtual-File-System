@@ -1,8 +1,8 @@
 # CMPSC 473, Project 4
 
 # Variables
-CC=g++ -std=c++0x
-LINK=gcc -std=gnu99
+CC=g++
+LINK=g++ -lstdc++
 CFLAGS=-Wall -Wextra
 LINKFLAGS=-g
 
@@ -29,7 +29,8 @@ TARGETS = main
 dummy : $(TARGETS)
 
 main: $(OBJS)
-	$(LINK) $(LINKFLAGS) -o $@ $(OBJS)
+	$(LINK) $(LINKFLAGS) -o $@ $(OBJS); \
+		rm $(OBJS)
 
 clean:
 	rm $(OBJS) $(TARGETS)
