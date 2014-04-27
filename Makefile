@@ -9,7 +9,8 @@ LINKFLAGS=-g -ggdb
 # Files to build
 
 OBJS=	main.o \
-	FSUtil.o \
+	FSU.o \
+	# FSUtil.o \
 	FileSystem.o \
 	PCB.o \
 	FBT.o \

@@ -1,4 +1,4 @@
-#include "FSUtil.h"
+#include "FSU.h"
 #include "Constants.h"
 
 
@@ -6,19 +6,19 @@ void parse(char *buf, int *argc, char *argv[]);
 
 struct action {
     const char* cmd;					// pointer to string
-    int (FSUtil::*action)(char* name, char* size);
+    int (FSU::*action)(char* name, char* size);
 } table[12] = {
-        { "root" , &FSUtil::do_root  },
-        { "print", &FSUtil::do_print },
-        { "chdir", &FSUtil::do_chdir },
-        { "mkdir", &FSUtil::do_mkdir },
-        { "rmdir", &FSUtil::do_rmdir },
-        { "mvdir", &FSUtil::do_mvdir },
-        { "mkfil", &FSUtil::do_mkfil },
-        { "rmfil", &FSUtil::do_rmfil },
-        { "mvfil", &FSUtil::do_mvfil },
-        { "szfil", &FSUtil::do_szfil },
-        { "exit" , &FSUtil::do_exit  },
+        { "root" , &FSU::do_root  },
+        { "print", &FSU::do_print },
+        { "chdir", &FSU::do_chdir },
+        { "mkdir", &FSU::do_mkdir },
+        { "rmdir", &FSU::do_rmdir },
+        { "mvdir", &FSU::do_mvdir },
+        { "mkfil", &FSU::do_mkfil },
+        { "rmfil", &FSU::do_rmfil },
+        { "mvfil", &FSU::do_mvfil },
+        { "szfil", &FSU::do_szfil },
+        { "exit" , &FSU::do_exit  },
         { NULL, NULL }				/* end marker, do not remove*/
     };
 
@@ -26,7 +26,7 @@ struct action {
 
 int main(int argc, char *argv[])
 {
-    FSUtil util = FSUtil();
+    FSU util = FSU();
 
   char in[LINESIZE];
   char *cmd, *fnm, *fsz;
