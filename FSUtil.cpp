@@ -28,7 +28,11 @@ int FSUtil::do_root(char *name, char *size) {
   if (debug) printf("%s\n", __func__);
 
   fs = new FileSystem();
+  if (fs != NULL) {
+      printf("Not NULL");
+  }
   curDir = fs->getRoot();
+  /* printf("%s", curDir->getName()); */
 
   return 0;
 }

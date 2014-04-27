@@ -2,6 +2,7 @@
 #include "PCB.h"
 
 FileSystem::FileSystem() {
+    printf("1");
     blocks[0] = new PCB(blocks);
 }
 
@@ -20,7 +21,7 @@ void FileSystem::addBlock(Block* block) {
 Directory* FileSystem::getRoot() {
     Directory* root = new Directory("Root");
     Block* freeBlock = getPCB()->getFreeBlock();
-    freeBlock = root;
+    /* freeBlock = root; */
 
     return root; 
 }

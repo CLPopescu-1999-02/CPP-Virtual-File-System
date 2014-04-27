@@ -1,5 +1,6 @@
 #include <string.h>
 
+#include <stdio.h>
 #include "FBT.h"
 #include "Block.h"
 

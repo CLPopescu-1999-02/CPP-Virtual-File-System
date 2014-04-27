@@ -1,10 +1,10 @@
 # CMPSC 473, Project 4
 
 # Variables
-CC=g++
-LINK=g++ -lstdc++
+CC=g++ -ggdb
+LINK=g++ -lstdc++ -ggdb
 CFLAGS=-Wall -Wextra
-LINKFLAGS=-g
+LINKFLAGS=-g -ggdb
 
 # Files to build
 
