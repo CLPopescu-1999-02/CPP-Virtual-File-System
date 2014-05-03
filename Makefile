@@ -9,8 +9,7 @@ LINKFLAGS=-g -ggdb
 # Files to build
 
 OBJS=	main.o \
-	FSU.o \
-	# FSUtil.o \
+	FSUtil.o \
 	FileSystem.o \
 	PCB.o \
 	FBT.o \
@@ -34,4 +33,4 @@ main: $(OBJS)
 		rm $(OBJS)
 
 clean:
-	rm $(OBJS) $(TARGETS)
+	rm $(TARGETS)
